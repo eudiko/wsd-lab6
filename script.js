@@ -1,91 +1,77 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('registrationForm');
     const fullNameInput = document.getElementById('fullName');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirmPassword');
     const dobInput = document.getElementById('dob');
-    const submitBtn = document.getElementById('submitBtn');
 
-    const namePattern = /^[A-Za-z\s]{3,}$/;
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    fullNameInput.addEventListener('blur', validateFullName);
+    emailInput.addEventListener('blur', validateEmail);
+    passwordInput.addEventListener('blur', validatePassword);
+    confirmPasswordInput.addEventListener('blur', validateConfirmPassword);
+    dobInput.addEventListener('blur', validateDob);
 
-    function validateInput(input, pattern, errorMessageId, successMessage) {
-        if (pattern.test(input.value)) {
+    form.addEventListener('submit', handleSubmit);
+
+    function validateFullName() {
+        const fullName = fullNameInput.value.trim();
+        const isValid = /^[A-Za-z\s]{3,}$/.test(fullName);
+        return toggleValidation(fullNameInput, isValid, 'Please enter a valid name with at least 3 alphabetic characters.');
+    }
+
+    function validateEmail() {
+        const email = emailInput.value.trim();
+        const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        return toggleValidation(emailInput, isValid, 'Please enter a valid email address.');
+    }
+
+    function validatePassword() {
+        const password = passwordInput.value.trim();
+        const isValid = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
+        return toggleValidation(passwordInput, isValid, 'Password must be at least 8 characters long and contain both letters and numbers.');
+    }
+
+    function validateConfirmPassword() {
+        const isValid = confirmPasswordInput.value.trim() === passwordInput.value.trim();
+        return toggleValidation(confirmPasswordInput, isValid, 'Passwords do not match.');
+    }
+
+    function validateDob() {
+        const dob = new Date(dobInput.value);
+        const age = new Date().getFullYear() - dob.getFullYear();
+        const isValid = age >= 18;
+        return toggleValidation(dobInput, isValid, 'You must be at least 18 years old.');
+    }
+
+    function toggleValidation(input, isValid, errorMessage) {
+        const errorSpan = input.nextElementSibling;
+        if (isValid) {
             input.classList.add('border-green-500');
             input.classList.remove('border-red-500');
-            document.getElementById(errorMessageId).textContent = successMessage || '';
+            errorSpan.textContent = '';
+            return true;
         } else {
             input.classList.add('border-red-500');
             input.classList.remove('border-green-500');
-            document.getElementById(errorMessageId).textContent = `Invalid ${input.name}`;
+            errorSpan.textContent = errorMessage;
+            return false;
         }
     }
 
-    function validatePasswordMatch() {
-        if (passwordInput.value === confirmPasswordInput.value) {
-            confirmPasswordInput.classList.add('border-green-500');
-            confirmPasswordInput.classList.remove('border-red-500');
-            document.getElementById('confirmPasswordError').textContent = '';
+    function handleSubmit(event) {
+        event.preventDefault();
+
+        const isFullNameValid = validateFullName();
+        const isEmailValid = validateEmail();
+        const isPasswordValid = validatePassword();
+        const isConfirmPasswordValid = validateConfirmPassword();
+        const isDobValid = validateDob();
+
+        if (isFullNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid && isDobValid) {
+            alert('Registration successful!');
         } else {
-            confirmPasswordInput.classList.add('border-red-500');
-            confirmPasswordInput.classList.remove('border-green-500');
-            document.getElementById('confirmPasswordError').textContent = 'Passwords do not match';
+            alert('Please correct the errors in the form.');
         }
     }
-
-    function calculateAge(dob) {
-        const birthDate = new Date(dob.value);
-        const ageDifMs = Date.now() - birthDate.getTime();
-        const ageDate = new Date(ageDifMs);
-        return Math.abs(ageDate.getUTCFullYear() - 1970);
-    }
-
-    function validateAge() {
-        const age = calculateAge(dobInput);
-        if (age >= 18) {
-            dobInput.classList.add('border-green-500');
-            dobInput.classList.remove('border-red-500');
-            document.getElementById('dobError').textContent = '';
-        } else {
-            dobInput.classList.add('border-red-500');
-            dobInput.classList.remove('border-green-500');
-            document.getElementById('dobError').textContent = 'You must be at least 18 years old';
-        }
-    }
-
-    fullNameInput.addEventListener('input', function () {
-        validateInput(fullNameInput, namePattern, 'fullNameError', '✓');
-    });
-
-    emailInput.addEventListener('input', function () {
-        validateInput(emailInput, emailPattern, 'emailError', '✓');
-    });
-
-    passwordInput.addEventListener('input', function () {
-        validateInput(passwordInput, passwordPattern, 'passwordError', '✓');
-    });
-
-    confirmPasswordInput.addEventListener('input', validatePasswordMatch);
-
-    dobInput.addEventListener('input', validateAge);
-
-    form.addEventListener('submit', function (event) {
-        validateInput(fullNameInput, namePattern, 'fullNameError');
-        validateInput(emailInput, emailPattern, 'emailError');
-        validateInput(passwordInput, passwordPattern, 'passwordError');
-        validatePasswordMatch();
-        validateAge();
-
-        if (
-            !fullNameInput.classList.contains('border-green-500') ||
-            !emailInput.classList.contains('border-green-500') ||
-            !passwordInput.classList.contains('border-green-500') ||
-            !confirmPasswordInput.classList.contains('border-green-500') ||
-            !dobInput.classList.contains('border-green-500')
-        ) {
-            event.preventDefault();
-        }
-    });
 });
